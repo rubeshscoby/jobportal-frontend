@@ -3,24 +3,34 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import API_BASE_URL from './api'
 
 async function loginAction(_, formData){
-    
   const json = Object.fromEntries(formData)
-  const res= await fetch(`${API_BASE_URL}/login`,{
-    method: "POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify(json)
-  })
-  const data = await res.json()
+  try {
+    const res = await fetch(`${API_BASE_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(json)
+    })
+    const data = await res.json()
 
-  if(res.ok){
-    localStorage.setItem("userId",data.user_id);
-    localStorage.setItem("username",data.username)
+    if (res.ok) {
+      localStorage.setItem("userId", data.user_id);
+      localStorage.setItem("username", data.username)
+      return data.message || "Login successful"
+    }
 
+    // Show the actual error from the server
+    if (typeof data === 'object' && data !== null) {
+      const messages = Object.entries(data)
+        .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+        .join('; ')
+      return messages || data.message || "Login failed"
+    }
+    return data.message || "Login failed"
+  } catch (error) {
+    return "Network error: Could not connect to server"
   }
-
-  return data.message || "Login Failed"
 }
 
 function LoginPage() {
@@ -30,7 +40,7 @@ function LoginPage() {
 
       const navigate = useNavigate()
 
-      if(message == "Login successful"){
+      if (message === "Login successful") {
         navigate("/jobs")
       }
 

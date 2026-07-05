@@ -5,15 +5,29 @@ import API_BASE_URL from './api'
 
 async function registerAction(_, formData){
   const json = Object.fromEntries(formData)
-  const res= await fetch(`${API_BASE_URL}/register`,{
-    method: "POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
-    body: JSON.stringify(json)
-  })
-  const data = await res.json()
-  return data.message || "Register Failed"
+  try {
+    const res = await fetch(`${API_BASE_URL}/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(json)
+    })
+    const data = await res.json()
+    if (res.ok) {
+      return data.message || "User registered successfully!"
+    }
+    // Show the actual validation errors from the server
+    if (typeof data === 'object' && data !== null) {
+      const messages = Object.entries(data)
+        .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+        .join('; ')
+      return messages || "Registration failed. Please check your input."
+    }
+    return data.message || "Registration failed"
+  } catch (error) {
+    return "Network error: Could not connect to server"
+  }
 }
 
 
@@ -102,8 +116,8 @@ export default function RegisterPage() {
                 </div>
 
               {/* inga register now again click pana koodathu so we use disabled property */}
-                <button disabled={isPending} type='submit ' className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2.5 rounded transition">
-                    {isPending ? 'Registering...':'Register Now'}
+                <button disabled={isPending} type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2.5 rounded transition">
+                    {isPending ? 'Registering...' : 'Register Now'}
                 </button>
 
                 <p className='text-center text-sm text-gray-600'>{message}</p>
